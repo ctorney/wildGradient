@@ -9,7 +9,7 @@ import panZoom
 DATAHOME = '/home/ctorney/data/tz-2017/'
 CODEHOME = '/home/ctorney/workspace/wildGradient/'
 inputname = CODEHOME + '/irMovieList.csv'
-dfMovies = pd.read_csv(inputname,index_col=0)
+#dfMovies = pd.read_csv(inputname,index_col=0)
 
 
 
@@ -74,7 +74,13 @@ def select_rois(img):
     
                 # add bbox to list if both points are different
                 if (lx, ty) != (rx, by):
-                    bbox = [lx, ty, rx, by]
+                    cx = 0.5*(lx+rx)/float(nx//2)
+                    cy = 0.5*(by+ty)/float(ny//2)
+
+                    wx = (rx -lx)/float(nx//2)
+                    wy = (by -ty)/float(ny//2)
+     
+                    bbox = [cx, cy, wx, wy]
                     bbox_list_rois.append(bbox)
     
             # if mouse is drawing set tmp rectangle endpoint to (x,y)
@@ -84,7 +90,8 @@ def select_rois(img):
     
     # clone image img and setup the mouse callback function
     img_copy = img.copy()
-    cv2.namedWindow('image')
+    cv2.namedWindow('image',cv2.WINDOW_NORMAL)
+    cv2.resizeWindow('image', 1600,1200)
     cv2.setMouseCallback('image', draw_rect_roi)
     
     # keep looping until the 'c' key is pressed
@@ -105,15 +112,31 @@ def select_rois(img):
             break
     # close all open windows
     cv2.destroyAllWindows()
-    
+    #cv2.waitKey(1)
     return bbox_list_rois
 
 imName = 'test.png'
 
 frame = cv2.imread(imName)
 
-aa= select_rois(frame)    
-    
+ny,nx,_ = frame.shape
 
+
+
+for x in range(2):
+    for y in range(2):
+        f = frame[y*ny//2:(y+1)*ny//2,x*nx//2:(x+1)*nx//2,:]
+        fr = f.copy()
+        rois = select_rois(fr)    
+        outFile = os.path.splitext(os.path.basename(imName))[0] + str(x) + '_' + str(y) + '.txt'
+        outIm = os.path.splitext(os.path.basename(imName))[0] + str(x) + '_' + str(y) + '.png'
+        output = open(outFile, "w")
+        cv2.imwrite(outIm,f)
+        for roi in rois:
+
+            s = '0 ' + str(roi[0]) + ' ' + str(roi[1]) + ' ' + str(roi[2]) + ' ' + str(roi[3]) + '\n' 
+            output.write(s)
+    
+        output.close()
 
 
