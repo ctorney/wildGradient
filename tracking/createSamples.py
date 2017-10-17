@@ -40,6 +40,42 @@ def allocate(y,x):#event,x,y,flags,param):
             
     counter += 1
 
+def blockUp(y,x):
+    global counter
+    startX = int(min(x,blockSelectX))
+    stopX = int(max(x,blockSelectX))
+
+    startY = int(min(y,blockSelectY))
+    stopY = int(max(y,blockSelectY))
+    step = 32
+    grabSize = 16#math.ceil((100.0/alt)*16.0)
+    for i in range(startX,stopX,step):
+        for j in range(startY,stopY,step):
+            tmpImg =  cleanFrame[max(0,j-grabSize):min(ny,j+grabSize), max(0,i-grabSize):min(nx,i+grabSize)].copy()
+            if allocation==WILDEBEEST:
+                save_path = "training/yes/img_" + str(counter) + ".png"
+            else:
+                save_path = "training/no/img_" + str(counter) + ".png"
+
+            
+            print(tmpImg.size,'===')
+            if tmpImg.size == 4*grabSize*grabSize*3:# and tmpImg[tmpImg==0].size<10 :
+                cv2.imwrite(save_path,tmpImg)
+
+            print(counter)
+            counter += 1
+
+
+
+def blockDown(y,x):
+    global blockSelectX
+    global blockSelectY
+    blockSelectX=x
+    blockSelectY=y
+
+blockSelectX=0
+blockSelectY=0
+
 
     
 counter = random.randint(0,10000)
@@ -51,9 +87,8 @@ ZEBRA=2
 for index,  d in dfMovies.iterrows():
 
     filename = d['filename']
-    print(filename)
+    filename = '/media/ctorney/gamma/day-7/DJI_0064.MP4'
     
-    continue    
 
     cap = cv2.VideoCapture(filename)
     frCount = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
@@ -93,7 +128,9 @@ for index,  d in dfMovies.iterrows():
 
         allocation=NOTHING
         frName = 'click no animals (ESC to quit, c to continue)'
-        window = panZoom.PanZoomWindow(frame, frName, onLeftClickFunction=allocate)
+   #     window = panZoom.PanZoomWindow(frame, frName, onLeftClickFunction=allocate)
+        window = panZoom.PanZoomWindow(frame, frName, onLeftClickFunction=allocate,onMiddleUpFunction=blockUp,onMiddleDownFunction=blockDown)
+
         while(1):
             k = cv2.waitKey(0) & 0xFF
             if k==27:    # Esc key to stop
